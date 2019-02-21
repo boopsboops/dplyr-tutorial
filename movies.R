@@ -18,14 +18,14 @@ mm.df %<>% mutate(tconst=str_split_fixed(movie_imdb_link,"/",6)[,5])
 imdb.ids <- mm.df %>% filter(!is.na(tconst)) %>% select(tconst) %>% pull(tconst)
 
 # now query the OMBD, but limited at 1000 max per day
-daily.one <- mclapply(imdb.ids[1:999],find_by_id,api_key="2c95f6b7", include_tomatoes=TRUE)
-daily.two <- mclapply(imdb.ids[1000:1999],find_by_id,api_key="2c95f6b7", include_tomatoes=TRUE)
-daily.three <- mclapply(imdb.ids[2000:2999],find_by_id,api_key="2c95f6b7", include_tomatoes=TRUE)
-daily.four <- mclapply(imdb.ids[3000:3999],find_by_id,api_key="2c95f6b7", include_tomatoes=TRUE)
-daily.five <- mclapply(imdb.ids[4000:4999],find_by_id,api_key="2c95f6b7", include_tomatoes=TRUE)
-daily.six <- mclapply(imdb.ids[5000:5043],find_by_id,api_key="2c95f6b7", include_tomatoes=TRUE)
+daily.one <- mclapply(imdb.ids[1:999],find_by_id,api_key="2c95f6b7",include_tomatoes=TRUE)
+daily.two <- mclapply(imdb.ids[1000:1999],find_by_id,api_key="2c95f6b7",include_tomatoes=TRUE)
+daily.three <- mclapply(imdb.ids[2000:2999],find_by_id,api_key="2c95f6b7",include_tomatoes=TRUE)
+daily.four <- mclapply(imdb.ids[3000:3999],find_by_id,api_key="2c95f6b7",include_tomatoes=TRUE)
+daily.five <- mclapply(imdb.ids[4000:4999],find_by_id,api_key="2c95f6b7",include_tomatoes=TRUE)
+daily.six <- mclapply(imdb.ids[5000:5043],find_by_id,api_key="2c95f6b7",include_tomatoes=TRUE)
 # create daily copy
-daily.df <- daily.two
+daily.df <- daily.three
 
 # join all the data frames
 # first extract the rotten tomato ratings from the ratings lists using Map
@@ -39,7 +39,7 @@ daily.df %>%
     write_csv("dailyX.csv")
     # remember to change file name by hand
 
-    
+
 ### analyse the final datasets 
 
 
@@ -128,7 +128,7 @@ movies.data.genre <- movies.data %>%
 movies.data.genre  %>% 
     filter(!is.na(budget) & !is.na(BoxOffice) & !is.na(imdbRating) & !is.na(tomatoMeter)) %>% 
     filter(perGenre > 10) %>% 
-    ggplot(aes(x=budget,y=BoxOffice)) + # change y= to "BoxOffice", "imdbRating", or "tomatoMeter"
+    ggplot(aes(x=budget,y=imdbRating)) + # change y= to "BoxOffice", "imdbRating", or "tomatoMeter"
     geom_point(alpha=0.2,shape=18) + 
     scale_x_log10() + 
     scale_y_log10() + 
