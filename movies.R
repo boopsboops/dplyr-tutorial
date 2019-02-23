@@ -25,7 +25,7 @@ daily.four <- mclapply(imdb.ids[3000:3999],find_by_id,api_key="2c95f6b7",include
 daily.five <- mclapply(imdb.ids[4000:4999],find_by_id,api_key="2c95f6b7",include_tomatoes=TRUE)
 daily.six <- mclapply(imdb.ids[5000:5043],find_by_id,api_key="2c95f6b7",include_tomatoes=TRUE)
 # create daily copy
-daily.df <- daily.four
+daily.df <- daily.five
 
 # join all the data frames
 # first extract the rotten tomato ratings from the ratings lists using Map
@@ -36,7 +36,7 @@ daily.df %>%
     unnest(ratingSite,tomatoMeter) %>% 
     filter(ratingSite=="Rotten Tomatoes") %>% 
     select(-Ratings) %>% 
-    write_csv("dailyX.csv")
+    write_csv("daily5.csv")
     # remember to change file name by hand
 
 
@@ -108,7 +108,7 @@ movies.data %<>%
 
 # plot tomato against imdb
 movies.data %>% filter(!is.na(tomatoMeter) & !is.na(imdbRating) & !is.na(budget) & !is.na(BoxOffice)) %>% 
-    ggplot(aes(x=tomatoMeter,y=imdbRating,size=BoxOffice)) + # CHANGE "BoxOffice" to "budget"
+    ggplot(aes(x=tomatoMeter,y=imdbRating,size=budget)) + # CHANGE "BoxOffice" to "budget"
     geom_point(alpha=0.3,shape=16,colour="tomato") +
     #geom_point(alpha=0.5,shape=16) +
     #scale_color_gradient(low="yellow", high="red") + 
@@ -128,7 +128,7 @@ movies.data.genre <- movies.data %>%
 movies.data.genre  %>% 
     filter(!is.na(budget) & !is.na(BoxOffice) & !is.na(imdbRating) & !is.na(tomatoMeter)) %>% 
     filter(perGenre > 100) %>% 
-    ggplot(aes(x=budget,y=tomatoMeter)) + # change y= to "BoxOffice", "imdbRating", or "tomatoMeter"
+    ggplot(aes(x=budget,y=imdbRating)) + # change y= to "BoxOffice", "imdbRating", or "tomatoMeter"
     geom_point(alpha=0.2,shape=18) + 
     scale_x_log10() + 
     scale_y_log10() + 
@@ -145,7 +145,8 @@ movies.data %>%
     summarise(meanIMDB=mean(imdbRating),sd=sd(imdbRating),nMovies=length(unique(imdbID))) %>%
     filter(nMovies >= 5) %>%
     arrange(desc(meanIMDB)) %>% # best
-    #arrange(desc(sd)) %>% # worst
+    #arrange(meanIMDB) %>% # best
+    #arrange(desc(sd)) %>% # inconsistent
     print(n=20)
 
 
