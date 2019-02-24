@@ -25,7 +25,7 @@ daily.four <- mclapply(imdb.ids[3000:3999],find_by_id,api_key="2c95f6b7",include
 daily.five <- mclapply(imdb.ids[4000:4999],find_by_id,api_key="2c95f6b7",include_tomatoes=TRUE)
 daily.six <- mclapply(imdb.ids[5000:5043],find_by_id,api_key="2c95f6b7",include_tomatoes=TRUE)
 # create daily copy
-daily.df <- daily.five
+daily.df <- daily.six
 
 # join all the data frames
 # first extract the rotten tomato ratings from the ratings lists using Map
@@ -36,7 +36,7 @@ daily.df %>%
     unnest(ratingSite,tomatoMeter) %>% 
     filter(ratingSite=="Rotten Tomatoes") %>% 
     select(-Ratings) %>% 
-    write_csv("daily5.csv")
+    write_csv("daily6.csv")
     # remember to change file name by hand
 
 
