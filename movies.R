@@ -54,24 +54,27 @@ movies.data %>% glimpse()
 
 # edit and remove junk columns
 movies.data %<>% 
-    mutate(
-    tomatoMeter=as.numeric(str_replace_all(tomatoMeter,"%","")), 
-    Released=ymd(Released), 
-    BoxOffice=as.numeric(str_replace_all(BoxOffice,"\\$|,","")),
-    Runtime=as.numeric(str_replace_all(Runtime," min","")),
-    #Year=parse_date_time(Year, "%Y")),
-    month=month(Released,label=TRUE)) %>%
-    select(-Type,-tomatoImage,-tomatoRating,-tomatoReviews,-tomatoFresh,-tomatoRotten,-tomatoConsensus,-tomatoUserMeter,-tomatoUserRating,-tomatoUserReviews,-tomatoURL,-DVD,-Website,-Response,-Season,-Episode,-seriesID,-totalSeasons,-ratingSite)
+    mutate(tomatoMeter=as.numeric(str_replace_all(tomatoMeter,"%","")), 
+        Released=ymd(Released), 
+        BoxOffice=as.numeric(str_replace_all(BoxOffice,"\\$|,","")),
+        Runtime=as.numeric(str_replace_all(Runtime," min","")),
+        month=month(Released,label=TRUE)) %>%
+    select(-Type,-tomatoImage,-tomatoRating,-tomatoReviews,-tomatoFresh,-tomatoRotten,-tomatoConsensus,
+        -tomatoUserMeter,-tomatoUserRating,-tomatoUserReviews,-tomatoURL,-DVD,-Website,-Response,-Season,
+        -Episode,-seriesID,-totalSeasons,-ratingSite)
 
 # take a look
 movies.data %>% glimpse()
 
-
 ### read in the budget data
 budget.data <- read_tsv("movie-budgets.tsv")
 
+# take a look
+budget.data %>% glimpse()
+
 # get IMDB id and remove other cols
-budget.data %<>% mutate(imdbID=str_split_fixed(url,"/",6)[,5]) %>%
+budget.data %<>% 
+    mutate(imdbID=str_split_fixed(url,"/",6)[,5]) %>%
     select(imdbID,budget,gross)
 
 # look at the data
@@ -87,13 +90,14 @@ movies.data %<>% mutate(BoxOffice=if_else(is.na(BoxOffice),gross,BoxOffice))
 # make a quick summary of some stats
 movies.data %>% 
     summarise(
-    nmovies=length(unique(imdbID)), 
-    maxDur=max(Runtime,na.rm=TRUE), 
-    minDur=min(Runtime,na.rm=TRUE), 
-    minBudget=min(budget,na.rm=TRUE), 
-    maxBudget=max(budget,na.rm=TRUE),
-    minYear=min(Year,na.rm=TRUE), 
-    maxYear=max(Year,na.rm=TRUE))
+        nmovies=length(unique(imdbID)), 
+        maxDur=max(Runtime,na.rm=TRUE), 
+        minDur=min(Runtime,na.rm=TRUE), 
+        minBudget=min(budget,na.rm=TRUE), 
+        maxBudget=max(budget,na.rm=TRUE),
+        minYear=min(Year,na.rm=TRUE), 
+        maxYear=max(Year,na.rm=TRUE)
+        )
 
 
 # plot movies per year
@@ -128,6 +132,7 @@ movies.data.genre <- movies.data %>%
 movies.data.genre  %>% 
     filter(!is.na(budget) & !is.na(BoxOffice) & !is.na(imdbRating) & !is.na(tomatoMeter)) %>% 
     filter(perGenre > 100) %>% 
+    # plot
     ggplot(aes(x=budget,y=imdbRating)) + # change y= to "BoxOffice", "imdbRating", or "tomatoMeter"
     geom_point(alpha=0.2,shape=18) + 
     scale_x_log10() + 
