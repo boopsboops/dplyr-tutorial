@@ -2,7 +2,7 @@
 A tutorial for dplyr
 
 Some elements of this tutorial are very closely based on the free online book "R for Data Science" by Hadley Wickham and Garrett Grolemund [https://r4ds.had.co.nz]
-This is definitely worth a read if you want to get to grips with dplyr. It doesn't take too long to go through and is very clear and easy to follow. It's a very worthwhile investment. 
+This is definitely worth a read if you want to get to grips with dplyr. It doesn't take too long to go through and is very clear and easy to follow. It's a very worthwhile investment of your time!  
 
 There are also various cheatsheets on this page [[https://www.rstudio.com/resources/cheatsheets/]] which provide good summaries of some of the functions you will be looking at and are useful as a quick reference guide (the Data Import and the Data Transformation ones are the most relevant for this session). 
 
@@ -54,7 +54,7 @@ You can create a new tibble from invidiual vectors using ```tibble()```, e.g.
 
 Tibbles automatically print the first 10 rows and so you don't need to use ``` head()``` to look at the top of your data.
 
-However, if you want to print everything then you can use e.g.``` print(n=20 , width=Inf) ```, where n is specifying the number of rows and width, the number of columns. Width = Inf means all columns.
+However, if you do want to print everything then you can use e.g.``` print(n=20 , width=Inf) ```, where n is specifying the number of rows and width, the number of columns (```width = Inf``` means all columns)
 
 If you want to pull out a single variable, you can use ```$``` or ```[[]]```, where $ automatically will provide names of variables to select from. ```[[]]``` can be used to extract by name ```df[["x"]]```or by position ```[[1]]```. 
 
@@ -65,7 +65,7 @@ Later on, we will introduce the pipe ```%>%```. Bear in mind that when we do, yo
 For the functions in dplyr to work, it is necessary to "tidy" your data. 
 
 Tidy data in R has each column as a variable, each row as an observation and each cell as one value. This means that row names should not be used.
-There are a two functions you can use to tidy your data, gather() and spread ().
+We will now cover the functions that can be used to tidy data. 
 
 ### gather()
 
@@ -82,7 +82,7 @@ Here is an example of an untidy data set, which is fictional data about the numb
 ```
 
 
-Code in R to create this tibble
+(Code in R to create this tibble)
 ```FootNMouth <- tibble(
   County = c("Oxfordshire", "Hertfordshire", "Devon"),
   March = c(20,89, 300),
@@ -90,8 +90,9 @@ Code in R to create this tibble
   
 )
 ```
+The problem with this dataset is that the column names are not names of variables, but values of a variable. March and April are values of the variable "Month" and so each row represented two observations, not one. 
 
-And the same data set, now tidied:
+This is the same data set, now tidied:
 
 ```# A tibble: 6 x 3
   County        Month `Number of farms infected`
@@ -104,30 +105,21 @@ And the same data set, now tidied:
 6 Devon         April                        293
 ```
 
-The problem with this dataset is that the column names were not names of variables, but values of a variable. March and April are values of the variable "Month" and so each row represented two observations, not one. 
 
-The tidy data above can be achieved using gather() like so:
+
+The tidy data above can be achieved using gather():
 
 ```FootNMouth %>%
   gather(March, April, key = "Month", value = "Number of farms infected")
 ```
-Again you can see the pipe ```%>%``` has been used here. More will be revealed later, but essentially this is making the data from the FootnMouth tibble be used in the gather() function. 
 
-NOTE: If you want to keep this tidy data, you need to assign the result to an object
+You can see the pipe ```%>%``` has been used here. More will be revealed later, but essentially this is making the data from the FootnMouth tibble be used in the gather() function. 
 
-```FootNMouth <- FootNMouth %>%
-  gather(March, April, key = "Month", value = "Number of farms infected")
-```
-
-Or you can use backward-piping, which means that it will override the previous version of "FootNMouth"
-
-RUPERT PLEASE INSERT AN EXAMPLE HERE
-
-You can see that you need to first need to specify in gather() the columns that represent values, not variables, in this case ```March``` and ```April```. 
+Using gather(), you need to first need to specify the columns that represent values, not variables, in this case ```March``` and ```April```. 
 
 Then you provide the name of the variable whose values are in the collumn names, so in this case ```Month``` and the name of the variable which is in the cells, ```Number of farms infected```. 
 
-NOTE: If the columns that you are gathering do not start with a letter, then you need to surround them with backticks ``` `` ``` in gather()
+NOTE: If the columns that you are gathering do not start with a letter, then you need to surround them with backticks ``` `` ``` 
 
 ### spread()
 
@@ -154,7 +146,7 @@ Take this untidy data set as an example (same data as above, other than it also 
 ```
 
 
-Code to make this tibble in R
+(Code to make this tibble in R)
 ``` FootNMouth2 <- tibble(
   County = c(rep("Oxfordshire",4), rep("Hertfordshire",4), rep("Devon", 4)),
   Month = c(rep("March", 2), rep("April", 2), rep("March", 2), rep("April", 2),
@@ -186,15 +178,39 @@ Using spread():
 
 ``` spread(key=type, value=count)```
 
-
-
-
-
+Where the "key" column is the column that contains the varible names and the "value" column contains the name of the column with values from multiple variables. 
 
 
 ### separate()
 
+Sometimes you have one column with data in each row that you want to split into multiple columns.
+
+For example, if you had one column with called "date", which had the date expressed as yyyy-mm-dd, but you wanted a column each for year, month and day.
+
+separate() can achieve this by splitting wherever a separator character appears (in this case "-")
+
+``` df %>%
+    separate(date, into = c("year", "month", "day"))
+```
 ### unite()
+
+Unite is the reverse of this. You specify the name of the new column as your first argument and then the names of the columns to merge. You can use ```sep =``` to specify what type of separator to use.
+
+``` df %>%
+       unite(date, year, month, day, sep="-")
+       
+```
+
+### Combining data sets
+
+You can combine data from two data sets using the mutating join functions:
+
+right_join(x,y)
+left_join(x,y)
+inner_join(x,y)
+full_join(x,y)
+
+For more information on these look at Chapter 13 of the book I mentioned, particularly section 13.4. 
 
 ## dplyr functions
 
@@ -202,17 +218,136 @@ Once you've got your data in tibble format and it is tidy, then you're ready to 
 
 
 ### filter()
-### mutate()
+
+filter() is very similar to the subset() function in base R. The main advantage of filter() over subset() is that it is able to be operate on SQL databases without pulling the data into memory. We won't be doing this today and it doesn't matter if you don't know what that means! However, it's good to use filter() alongside other dplyr functions and it can be faster when you have lots of data. 
+
+filter() subsets observations based on their values. 
+
+So for example with the built in "starwars" data in R we can filter to find all the characters that have blue eyes:
+
+``` filter(starwars, eye_color == "blue") ```
+
+You can filter multiple columns simultaneously. Here we are filtering for humans that have blue eyes: 
+
+``` filter(starwars, eye_color == "blue", species == "Human") ```
+
+
+You always have the name of the tibble you want to filter as the first argument, followed by the arguments that specify the filtering.
+
+You can use any of these comparison operators:
+
+``` >```, ```>=```, ```<```, ```<=``` , ```!=``` (not equal to) and ```==``` (equal to)
+
+or any of these logical operators:
+
+```&``` (and) ```|``` (or) ```!``` (not)
+
+Be careful when using the logical operators, as you need to write out the same column multiple times if you are filtering for multiple things. For example if you wanted to find out which Star Wars characters had blue OR brown eyes you would need to write:
+
+``` filter(starwars, eye_color == "blue"| eye_color == "brown")```
+
+
+not ``` filter(starwars, eye_color == "blue"| "brown")```
+
+
+(Remember De Morgan's law : ```!(x&y)``` is the same as ```!x|!y``` and ```!x|y``` is the same as ```!x and !y```
+
+If this is still a bit confusing, the book I recommended explains this in more detail in Chapter 5.2.3)
+
+
+One of the most useful operators I've found is:
+
+``` %in% ``` which often can be used in place of some of the logical operators. For example if you wanted to find out which Star Wars characters had blue OR brown eyes, then for the blue OR brown example used above you could do:
+
+
+```filter(starwars, eye_color %in% c("blue", "brown"))```
+
+I find it most useful when using one dataframe to subset another one.
+
+For example if I had an imaginary dataframe that had the student ID numbers of all students who had passed an exam (let's call it "passed") and then another dataframe containing information about all the students in the yeargroup, including their ID number (let's call it "studentInfo"), then we could filter the "studentInfo" dataframe using the studentID number to find out more information about only those students who had passed:
+
+``` filter(studentInfo, studentInfo$studentID %in% passed$studentID) ```
+
 ### arrange()
+
+This changes the order of rows based on columns and so for example, can be used in combination with desc() to re-order by a columnm in descending order. To rearrange the starwards data so that it is sorted from the character with the tallest height to the shortest height you can do:
+
+```arrange(starwars, desc(height))```
+
+This can be used in combination with lots of other functions. Missing values are always sorted at the end. 
+
 ### select ()
-### summarise() and groupby()
+
+Select allows you to select specific columns that you want, e.g.
+
+```select(starwars, name, height, homeworld)```
 
 
+and can be used alongside the functions:
 
-## Combining data sets
-leftjoin()
+```starts_with("un")``` - matches names that begin with "un"
+```ends_with("ing")``` - matches names that end with "ing"
+```contains("he")```- matches names that contain "he
+```matches(".(.)\\1")``` - selects variables that match a regular expression. Find out more about this in Chapter 14 "strings" of the book.
+```num_range("y", 2:4)``` - matches y2, y3, and y4
 
-## pipes
+### rename()
+
+rename() can be used to rename columns
+
+rename(starwars, name = Name)
+
+### mutate()
+
+You can add new columns with mutate that can use data from other columns. Say we wanted to calculate the BMI of the Star Wars characters. 
+We could use the "height" and "mass" columns (not certain of their units, but doesn't matter for the sake of this example), as BMI is your weight divided by your height squared (in centimeters).
+
+```mutate(starwars, BMI = mass/((height)^2))```
+
+use transmute() if you only want to keep the new columns. 
+
+### summarise() and group_by()
+
+summarise() collapses a data frame into a single row. It is commonly used alongside group_by() which means that dplyr functions can be applied by group. It is also usually used with other functions such as mean(), median() etc.
+
+If we wanted to find the mean height of the Star Wars characters by species then we would do:
+
+```heightSW <- group_by(starwars, species)
+summarise(heightSW, AvHeightPerSp = mean(height, na.rm = TRUE))
+
+```
+summarise() and group_by() are often used with the pipe, which we will now get on to explaining...
+
+## The pipe
+The pipe is written as ```%>%``` and can be pronounced as "then". 
+
+It allows for results from one step, function or transformation to go straight to the next step, without needing to make intermediate objects.
+
+So for example, if you had wanted to do find the average height of Star Wars characters by species as we had just described, but then arrange it in descending order (with arrange() and desc() as described earlier) then you could do the following:
+
+
+```AVHeightSPDf <- starwars %>%
+  group_by(species) %>%
+  summarise(
+    AvHeightPerSp = mean(height, na.rm = TRUE)
+     ) %>%
+  arrange(., desc(AvHeightPerSp))
+  ```
+  
+  To describe this code in words, I would say:
+  
+ (1) Create an object called "AVHeightSPDf". This will contain the results of the following:
+ (2) You have the dataframe called "starwars"
+ (3) Then group it by the column "species"
+ (4) Then make a new column called "AVHeightPerSP" containing the mean height per species. Remove any NAs
+ (5) Then rearrange the AVHeightPerSP column in descending order 
+ 
+ 
+You can also use backward-piping, which means that instead of needing to create an new object, it will override the previous version of data that you are using
+
+RUPERT PLEASE INSERT AN EXAMPLE HERE
+  
+
 
 
 
