@@ -4,6 +4,10 @@ A tutorial for dplyr
 Some elements of this tutorial are very closely based on the free online book "R for Data Science" by Hadley Wickham and Garrett Grolemund [https://r4ds.had.co.nz]
 This is definitely worth a read if you want to get to grips with dplyr. It doesn't take too long to go through and is very clear and easy to follow. It's a very worthwhile investment. 
 
+There are also various cheatsheets on this page [[https://www.rstudio.com/resources/cheatsheets/]] which provide good summaries of some of the functions you will be looking at and are useful as a quick reference guide (the Data Import and the Data Transformation ones are the most relevant for this session). 
+
+
+
 ## Installing the tidyverse
 
 The tidyverse is a collection of many packages, including dplyr, which we will need for this tutorial. 
@@ -61,14 +65,22 @@ Later on, we will introduce the pipe ```%>%```. Bear in mind that when we do, yo
 For the functions in dplyr to work, it is necessary to "tidy" your data. 
 
 Tidy data in R has each column as a variable, each row as an observation and each cell as one value. This means that row names should not be used.
+There are a two functions you can use to tidy your data, gather() and spread ().
+
+### gather()
+
+gather() takes columns that are values of a variable and creates extra rows so that each row is showing just one observation.
 
 Here is an example of an untidy data set, which is fictional data about the number of farms infected with foot and mouth during March and April:
 
-|County       | March | April | 
-|-------------|:-----:|------:|
-|Oxfordshire  | 20    | 24    |
-|Hertfordshire| 89    | 103   |
-|Devon        | 300   | 293   |
+```# A tibble: 3 x 3
+  County        March April
+  <chr>         <dbl> <dbl>
+1 Oxfordshire      20    24
+2 Hertfordshire    89   103
+3 Devon           300   293
+```
+
 
 Code in R to create this tibble
 ```FootNMouth <- tibble(
@@ -81,31 +93,35 @@ Code in R to create this tibble
 
 And the same data set, now tidied:
 
-|County       | Month | Number of farms infected | 
-|-------------|:-----:|-------------------------:|
-|Oxfordshire  | March | 20                       |
-|Oxfordshire  | April | 24                       |
-|Hertfordshire| March | 89                       |
-|Hertfordshire| April | 103                      |
-|Devon        | March | 300                      |
-|Devon        | April | 293                      |
-
+```# A tibble: 6 x 3
+  County        Month `Number of farms infected`
+  <chr>         <chr>                      <dbl>
+1 Oxfordshire   March                         20
+2 Hertfordshire March                         89
+3 Devon         March                        300
+4 Oxfordshire   April                         24
+5 Hertfordshire April                        103
+6 Devon         April                        293
+```
 
 The problem with this dataset is that the column names were not names of variables, but values of a variable. March and April are values of the variable "Month" and so each row represented two observations, not one. 
-
-There are a two functions you can use to tidy your data, gather() and spread ()
-
-### gather()
-
-gather() takes columns that are values of a variable and creates extra rows so that each row is showing just one observation. 
 
 The tidy data above can be achieved using gather() like so:
 
 ```FootNMouth %>%
   gather(March, April, key = "Month", value = "Number of farms infected")
 ```
-
 Again you can see the pipe ```%>%``` has been used here. More will be revealed later, but essentially this is making the data from the FootnMouth tibble be used in the gather() function. 
+
+NOTE: If you want to keep this tidy data, you need to assign the result to an object
+
+```FootNMouth <- FootNMouth %>%
+  gather(March, April, key = "Month", value = "Number of farms infected")
+```
+
+Or you can use backward-piping, which means that it will override the previous version of "FootNMouth"
+
+RUPERT PLEASE INSERT AN EXAMPLE HERE
 
 You can see that you need to first need to specify in gather() the columns that represent values, not variables, in this case ```March``` and ```April```. 
 
@@ -115,13 +131,88 @@ NOTE: If the columns that you are gathering do not start with a letter, then you
 
 ### spread()
 
+spread ()) does the opposite of gather (), it creates extra columns when an observation is scattered accross multiple rows.
+
+Take this untidy data set as an example (same data as above, other than it also includes data on the average number of cows infected per farm that is infected): 
+
+
+```# A tibble: 12 x 4
+   County        Month type               count
+   <chr>         <chr> <chr>              <dbl>
+ 1 Oxfordshire   March NoFarmsInf            20
+ 2 Oxfordshire   March AvNoCowsInfPerFarm   100
+ 3 Oxfordshire   April NoFarmsInf            24
+ 4 Oxfordshire   April AvNoCowsInfPerFarm   102
+ 5 Hertfordshire March NoFarmsInf            89
+ 6 Hertfordshire March AvNoCowsInfPerFarm    50
+ 7 Hertfordshire April NoFarmsInf           103
+ 8 Hertfordshire April AvNoCowsInfPerFarm    63
+ 9 Devon         March NoFarmsInf           300
+10 Devon         March AvNoCowsInfPerFarm    10
+11 Devon         April NoFarmsInf           293
+12 Devon         April AvNoCowsInfPerFarm     7
+```
+
+
+Code to make this tibble in R
+``` FootNMouth2 <- tibble(
+  County = c(rep("Oxfordshire",4), rep("Hertfordshire",4), rep("Devon", 4)),
+  Month = c(rep("March", 2), rep("April", 2), rep("March", 2), rep("April", 2),
+            rep("March", 2), rep("April", 2)),
+  type = c("NoFarmsInf", "AvNoCowsInfPerFarm", "NoFarmsInf", "AvNoCowsInfPerFarm", 
+           "NoFarmsInf", "AvNoCowsInfPerFarm", "NoFarmsInf", "AvNoCowsInfPerFarm", 
+           "NoFarmsInf", "AvNoCowsInfPerFarm", "NoFarmsInf", "AvNoCowsInfPerFarm"),
+  count = c(20,100,24,102,89,50,103,63,300,10,293,7)
+  
+  )
+  ```
+
+This can be tidied to look like this:
+
+``` # A tibble: 6 x 4
+  County        Month AvNoCowsInfPerFarm NoFarmsInf
+  <chr>         <chr>              <dbl>      <dbl>
+1 Devon         April                  7        293
+2 Devon         March                 10        300
+3 Hertfordshire April                 63        103
+4 Hertfordshire March                 50         89
+5 Oxfordshire   April                102         24
+6 Oxfordshire   March                100         20
+
+```
+
+
+Using spread():
+
+``` spread(key=type, value=count)```
 
 
 
-## relational data
+
+
+
+
+### separate()
+
+### unite()
+
+## dplyr functions
+
+Once you've got your data in tibble format and it is tidy, then you're ready to start using the dplyr functions. We will briefly go through what each one does here and then you can use this as a reference when you start to use them later on in the tutorial. 
+
+
+### filter()
+### mutate()
+### arrange()
+### select ()
+### summarise() and groupby()
+
+
+
+## Combining data sets
 leftjoin()
 
-
+## pipes
 
 
 
