@@ -112,7 +112,7 @@ movies.data %<>%
 
 # plot tomato against imdb
 movies.data %>% filter(!is.na(tomatoMeter) & !is.na(imdbRating) & !is.na(budget) & !is.na(BoxOffice)) %>% 
-    ggplot(aes(x=tomatoMeter,y=imdbRating,size=budget)) + # CHANGE "BoxOffice" to "budget"
+    ggplot(aes(x=tomatoMeter,y=imdbRating,size=BoxOffice)) + # CHANGE "BoxOffice" to "budget"
     geom_point(alpha=0.3,shape=16,colour="tomato") +
     #geom_point(alpha=0.5,shape=16) +
     #scale_color_gradient(low="yellow", high="red") + 
@@ -133,7 +133,7 @@ movies.data.genre  %>%
     filter(!is.na(budget) & !is.na(BoxOffice) & !is.na(imdbRating) & !is.na(tomatoMeter)) %>% 
     filter(perGenre > 100) %>% 
     # plot
-    ggplot(aes(x=budget,y=imdbRating)) + # change y= to "BoxOffice", "imdbRating", or "tomatoMeter"
+    ggplot(aes(x=BoxOffice,y=imdbRating)) + # change y= to "BoxOffice", "imdbRating", or "tomatoMeter"
     geom_point(alpha=0.2,shape=18) + 
     scale_x_log10() + 
     scale_y_log10() + 
@@ -149,9 +149,9 @@ movies.data %>%
     group_by(Director) %>% 
     summarise(meanIMDB=mean(imdbRating),sd=sd(imdbRating),nMovies=length(unique(imdbID))) %>%
     filter(nMovies >= 5) %>%
-    arrange(desc(meanIMDB)) %>% # best
-    #arrange(meanIMDB) %>% # best
-    #arrange(desc(sd)) %>% # inconsistent
+    #arrange(desc(meanIMDB)) %>% # best
+    #arrange(meanIMDB) %>% # worst
+    arrange(desc(sd)) %>% # inconsistent
     print(n=20)
 
 

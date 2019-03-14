@@ -1,42 +1,37 @@
-# dplyr-tutorial
-A tutorial for dplyr
+# A quick tutorial on dplyr (and tidyverse)
 
-Some elements of this tutorial are very closely based on the free online book "R for Data Science" by Hadley Wickham and Garrett Grolemund [https://r4ds.had.co.nz]
-This is definitely worth a read if you want to get to grips with dplyr. It doesn't take too long to go through and is very clear and easy to follow. It's a very worthwhile investment of your time!  
+## What is Tidyverse?
 
-There are also various cheatsheets on this page [[https://www.rstudio.com/resources/cheatsheets/]] which provide good summaries of some of the functions you will be looking at and are useful as a quick reference guide (the Data Import and the Data Transformation ones are the most relevant for this session). 
+The [tidyverse](https://www.tidyverse.org/) is a collection of R packages, including dplyr, which we will need for this tutorial. It was created by R guru Hadley Wickham (and many other people). The packages are for all the basics of data manipulation in R: reading, wrangling, and plotting your data.
 
+Why not use base R? Tidyverse is SO MUCH BETTER than base R. It's simple, sensible, modern, user friendly, well documented, and intuitive. R started as a stats language, but now it's used for all kinds of general data such as genetic data, images, sounds. Here's a classic example.
 
+Reading a spreadsheet in base R:
 
-## Installing the tidyverse
-
-The tidyverse is a collection of many packages, including dplyr, which we will need for this tutorial. 
-
-They can all be installed at once:
-
-```
-install.packages("tidyverse")
+``` r
+read.table(file="yourdata.csv", header=TRUE, stringsAsFactors=FALSE, sep=",")
 ```
 
-Don't forget to load them each time you open R with:
+In readr package:
 
-```
-library(tidyverse)
-```
-
-If you are having issues with this on a university laptop, then specifying the location of where you want to install the packages and then specifying this location again when calling them, usually helps to solve most issues. 
-
-```
-install.packages("tidyverse", lib="/my R packages/")
+``` r
+read_csv(file="yourdata.csv")
 ```
 
-```
-library(tidyverse, lib.loc= "/my R packages/" )
-```
+### What dplyr is not
+
+It's not "plyr". This is an old package, and comprises the initial iteration of what became dplyr and tidyverse. If you see a Stack Overflow answer that uses plyr, certainly there will be a better dplyr answer somewhere. Try not to use this package, as it has been retired.
+
+### More info
+
+Some elements of this tutorial are very closely based on the free online book "R for Data Science" by Hadley Wickham and Garrett Grolemund [https://r4ds.had.co.nz](https://r4ds.had.co.nz). This is definitely worth a read if you want to get to grips with dplyr. It doesn't take too long to go through and is very clear and easy to follow. It's a very worthwhile investment of your time!  
+
+There are also various cheatsheets at [https://www.rstudio.com/resources/cheatsheets/](https://www.rstudio.com/resources/cheatsheets/), which provide good summaries of some of the functions you will be looking at and are useful as a quick reference guide (the Data Import and the Data Transformation ones are the most relevant for this session).
+
 
 ## Tibbles
 
-These set of packages usually work best with "tibbles" which are an alternative data frame to R's traditional `data.frame()`
+These set of packages usually work best with "tibbles" which are an alternative dataframe format to R's traditional `data.frame()`.
 
 We will be working with tibbles today. If you have installed the tidyverse, this will have included the tibble package. If you want to find out more about how they work then there is a whole section on them in Chapter 10 of the book that I mentioned at the beginning. For now I will just give you the code that you need to use them.
 
@@ -385,6 +380,13 @@ RUPERT PLEASE INSERT AN EXAMPLE HERE
 
 ## A real life example: movies!
 
+Please now install the "magrittr" and "lubridate" packages. 
+
+``` r
+library("magrittr")
+library("lubridate")
+```
+
 Here we are going to analyse some real world data for movies. But because it it's someone else's data, we need to clean it first.
 
 Here we have a dataset of various movie data. They are in several CSV files, so we read these in using `lapply()` and `read_csv()`. We specify our NAs too:
@@ -459,8 +461,211 @@ Now we can merge it with the other dataset by the new IMDB code.
 movies.joined <- left_join(movies.data, budget.data,by="imdbID")
 ```
 
+Here because some of the data is duplicated between the two datasets, we replace any missing box office data, with movie gross data using `if_else()` and `mutate()`. 
+
 ``` r
 # check for missing data add any missing BoxOffice data
 movies.joined %>% filter(is.na(BoxOffice))
 movies.joined %<>% mutate(BoxOffice=if_else(is.na(BoxOffice),gross,BoxOffice))
 ```
+
+Here we use `summarise()` to look at the descriptive stats for the data.
+
+``` r
+# make a quick summary of some stats
+movies.joined %>% 
+    summarise(
+        nmovies=length(unique(imdbID)), 
+        maxDur=max(Runtime,na.rm=TRUE), 
+        minDur=min(Runtime,na.rm=TRUE), 
+        minBudget=min(budget,na.rm=TRUE), 
+        maxBudget=max(budget,na.rm=TRUE),
+        minYear=min(Year,na.rm=TRUE), 
+        maxYear=max(Year,na.rm=TRUE)
+        )
+```
+
+We can plot it too!
+
+``` r
+# plot movies per year
+movies.joined %>% ggplot(aes(Year)) + geom_histogram(fill="tomato") + theme_bw()
+```
+
+![text](time.png)
+
+Having a look at the data, we see there are some duplicate entries and spurious outliers that we can remove:
+
+``` r
+# remove outliers
+movies.joined %<>% 
+    distinct() %>% 
+    filter(between(Runtime,60,240), between(budget,500000,500000000), between(Year,1977,max(Year,na.rm=TRUE)))
+```
+
+Now we can do some visualisations (and removing NAs). Here is Rotten Tomatoes score plotted against IMDB rating, with dot size according to movie budget.
+
+``` r
+# plot tomato rating against imdb rating
+movies.joined %>% 
+    filter(!is.na(tomatoMeter) & !is.na(imdbRating) & !is.na(budget) & !is.na(BoxOffice)) %>% 
+    ggplot(aes(x=tomatoMeter,y=imdbRating,size=budget)) + 
+    geom_point(alpha=0.3,shape=16,colour="tomato") +
+    theme_bw()
+```
+
+![text](budget.png)
+
+Here is Rotten Tomatoes score plotted against IMDB rating, with dot size according to movie gross at the box office.
+
+``` r
+# plot tomato rating against imdb rating
+movies.joined %>% 
+    filter(!is.na(tomatoMeter) & !is.na(imdbRating) & !is.na(budget) & !is.na(BoxOffice)) %>% 
+    ggplot(aes(x=tomatoMeter,y=imdbRating,size=BoxOffice)) + 
+    geom_point(alpha=0.3,shape=16,colour="tomato") +
+    theme_bw()
+```
+
+![text](box.png)
+
+Now we can analyse by genre, but first we need to tidy the data, as the genre is concatentated in one column. We "gather" the data so genre is one column, and entries are duplicated according to multiple columns. We also count the number of movies per genre using `group_by()` and `mutate()`.
+
+``` r
+# gather by genre
+movies.data.genre <- movies.joined %>% 
+    separate(Genre, into=c("genre1","genre2","genre3","genre4","genre5","genre6","genre7","genre8"), sep=", ") %>% 
+    gather(key="genreN",value="Genre",genre1,genre2,genre3,genre4,genre5,genre6,genre7,genre8, na.rm=TRUE) %>% 
+    group_by(Genre) %>% 
+    mutate(perGenre=length(unique(imdbID))) %>% 
+    ungroup() %>% 
+    select(-genreN) %>% 
+    mutate(Genre=as_factor(Genre))
+```
+
+Now we can plot by genre (removing the rare genres), looking at an association between movie budget and IMDB rating. We need a log10 scale.
+
+``` r
+# filter NAs and plot
+movies.data.genre  %>% 
+    filter(!is.na(budget) & !is.na(BoxOffice) & !is.na(imdbRating) & !is.na(tomatoMeter)) %>% 
+    filter(perGenre > 100) %>% 
+    ggplot(aes(x=budget,y=imdbRating)) +
+    geom_point(alpha=0.2,shape=18) + 
+    scale_x_log10() + 
+    scale_y_log10() + 
+    geom_smooth(method="lm") + 
+    facet_wrap(~Genre, scales="free") + 
+    theme_bw()
+```
+
+![text](genre-budget.png)
+
+Now we can plot movie gross against IMDB rating:
+
+``` r
+movies.data.genre  %>% 
+    filter(!is.na(budget) & !is.na(BoxOffice) & !is.na(imdbRating) & !is.na(tomatoMeter)) %>% 
+    filter(perGenre > 100) %>% 
+    ggplot(aes(x=BoxOffice,y=imdbRating)) + 
+    geom_point(alpha=0.2,shape=18) + 
+    scale_x_log10() + 
+    scale_y_log10() + 
+    geom_smooth(method="lm") + 
+    facet_wrap(~Genre, scales="free") + 
+    theme_bw()
+```
+
+![text](genre-gross.png)
+
+Now lets look at who the best directors are by IMDB rating (that have more than 5 movies in the dataset) ...
+
+``` r
+# filter, clean, summarise
+movies.data %>% 
+    filter(!is.na(Director) & !is.na(imdbRating)) %>% 
+    mutate(Director=str_replace_all(Director,", .+","")) %>% 
+    group_by(Director) %>% 
+    summarise(meanIMDB=mean(imdbRating),sd=sd(imdbRating),nMovies=length(unique(imdbID))) %>%
+    filter(nMovies >= 5) %>%
+    arrange(desc(meanIMDB)) %>% # best
+    #arrange(meanIMDB) %>% # best
+    #arrange(desc(sd)) %>% # inconsistent
+    print(n=20)
+```
+
+``` r
+# A tibble: 170 x 4
+Director              meanIMDB    sd nMovies
+<chr>                    <dbl> <dbl>   <int>
+Christopher Nolan         8.41 0.538       8
+Quentin Tarantino         8.16 0.421       8
+James Cameron             7.9  0.451       7
+Alejandro G. Inarritu     7.8  0.245       5
+Peter Jackson             7.8  0.766       9
+David Fincher             7.75 0.721      10
+Martin Scorsese           7.62 0.621      16
+Wes Anderson              7.61 0.363       7
+Paul Thomas Anderson      7.53 0.589       6
+Paul Greengrass           7.47 0.544       7
+Darren Aronofsky          7.46 0.996       5
+Danny Boyle               7.44 0.577       7
+Sam Mendes                7.44 0.556       7
+Steven Spielberg          7.44 0.776      25
+Alexander Payne           7.4  0.2         5
+Robert Zemeckis           7.38 0.774      12
+Mike Leigh                7.36 0.351       5
+Richard Linklater         7.35 0.688      10
+John Lasseter             7.34 0.808       5
+Jean-Pierre Jeunet        7.3  0.778       5
+# ... with 150 more rows
+```
+
+`arrange()` by standard deviation to get the most inconsistent directors. 
+
+``` r
+# A tibble: 170 x 4
+Director              meanIMDB    sd nMovies
+<chr>                    <dbl> <dbl>   <int>
+Jon M. Chu               5.28  2.07       5
+Guy Ritchie              7.11  1.60       7
+John McTiernan           6.64  1.47      10
+Robert Rodriguez         5.6   1.43      12
+Paul Verhoeven           6.58  1.33       5
+Malcolm D. Lee           5.62  1.31       5
+Jan de Bont              5.54  1.30       5
+M. Night Shyamalan       6.03  1.28       9
+Michael Polish           5.8   1.26       5
+Curtis Hanson            6.65  1.23       6
+Lana Wachowski           6.88  1.18       6
+Kenny Ortega             5.8   1.17       5
+David O. Russell         6.75  1.16       8
+Francis Ford Coppola     6.94  1.10       8
+Chris Weitz              6.1   1.08       5
+Mark Neveldine           5.64  1.06       5
+Spike Lee                6.6   1.06      14
+Dennis Dugan             5.72  1.04       9
+Joel Schumacher          6.33  1.03      12
+Ben Stiller              6.34  1.02       5
+# ... with 150 more rows
+```
+
+Now we can look at average movie takings over the course of a year. You get the idea ...
+
+``` r
+# takings by month
+movies.data %>% 
+    filter(!is.na(BoxOffice) & !is.na(month)) %>% 
+    group_by(month) %>% 
+    summarise(meanBox=mean(BoxOffice),sd=sd(BoxOffice),n=length(unique(imdbID)),CI=qnorm(0.975)*sd/sqrt(n)) %>% 
+    ggplot(aes(x=month,y=meanBox,group=1)) + 
+    geom_ribbon(aes(ymax=meanBox+CI,ymin=meanBox-CI,group=1),fill="tomato",alpha=0.3) + 
+    geom_line() +
+    theme_bw()
+```
+
+![text](takings.png)
+
+## Competition
+
+So, there's alot one can do with this movie dataset. Have a go at making an interesting statistic or visualisation using some dplyr. Good luck!
