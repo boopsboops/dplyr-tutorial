@@ -332,7 +332,7 @@ Please now install the "lubridate" packages.
 library("lubridate")
 ```
 
-Download the data as a zip from , then unpack and set as your working directory.
+Download the data as a zip from [https://github.com/boopsboops/dplyr-tutorial/raw/master/dplyr-tutorial-data.zip](https://github.com/boopsboops/dplyr-tutorial/raw/master/dplyr-tutorial-data.zip), then unpack and set the folder as your working directory and create save your R script in it.
 
 Here we are going to analyse some real world data for movies. But because it it's someone else's data, we need to clean it first.
 
